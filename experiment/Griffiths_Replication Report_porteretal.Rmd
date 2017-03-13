@@ -43,6 +43,9 @@ This procedure was precisely followed with the exception of the exact wording of
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(effsize)
+library(packrat)
+packrat::init()
 ```
 
 
@@ -67,7 +70,7 @@ t(86) = 3.73, p < .001, d = 0.80."
 ```{r manipulation checks}
 #condition variable
 pilot1 = pilot1 %>%
-  slice(3:7) %>%
+  select(1:2) %>%
   mutate(condition= ifelse(is.na(LIB_DV) , "ULIB", "LIB"))
 str(pilot1$condition)
 
@@ -110,10 +113,18 @@ identity"
 pilot1[is.na(pilot1)] = ''
 #creating new 'social identity perception' variable
 pilot1=pilot1%>%
-  mutate(peterID=paste(LIB_DV, ULIB_DV))
+  mutate(peterID=paste(LIB_DV, ULIB_DV)) %>%
+  mutate(peterID=as.numeric(peterID)) %>%
+  mutate(pol_orient=as.factor(pol_orient))
 
 #does LIB condition impact people's perceptions of Peter's identity? (1=definitely a democrat, 7=definitely a republican)
 summary(lm(peterID ~ condition, data=pilot1))
+#getting effect size for this main DV analysis 
+cohen.d(pilot1$peterID ~ pilot1$condition, conf.level=0.95)
+
+#testing for moderation of participants' political affiliation 
+summary(lm(peterID ~ condition + pol_orient, data=pilot1))
+
 ```
 
 ```{r replication plot from original study}
@@ -134,7 +145,6 @@ I wrote the language for the demographics questions myself, and borrowed four it
 ### Link to current version of the experiment 
 
 https://stanforduniversity.qualtrics.com/SE/?SID=SV_8BT3uDEjxT0UBIF 
-
 
 
 
@@ -173,10 +183,6 @@ Data preparation following the analysis plan.
 The analyses as specified in the analysis plan.  
 
 *Side-by-side graph with original graph is ideal here*
-
-###Exploratory analyses
-
-Any follow-up analyses desired (not required).  
 
 ## Discussion
 
