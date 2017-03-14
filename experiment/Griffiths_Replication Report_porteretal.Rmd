@@ -45,7 +45,6 @@ This procedure was precisely followed with the exception of the exact wording of
 library(tidyverse)
 library(effsize)
 library(packrat)
-packrat::init()
 ```
 
 
@@ -70,7 +69,7 @@ t(86) = 3.73, p < .001, d = 0.80."
 ```{r manipulation checks}
 #condition variable
 pilot1 = pilot1 %>%
-  select(1:2) %>%
+  slice(-(1:2)) %>%
   mutate(condition= ifelse(is.na(LIB_DV) , "ULIB", "LIB"))
 str(pilot1$condition)
 
