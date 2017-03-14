@@ -44,7 +44,6 @@ This procedure was precisely followed with the exception of the exact wording of
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(effsize)
-library(packrat)
 ```
 
 
