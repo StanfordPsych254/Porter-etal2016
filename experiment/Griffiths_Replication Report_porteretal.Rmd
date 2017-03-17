@@ -1,6 +1,6 @@
 ---
-title: "Replication of Study X by Sample & Sample (200x, Psychological Science)"
-author: "Replication Author[s] (contact information)"
+title: "Replication of Porter et al. 2016 by Griffiths (2016, Psychological Science)"
+author: "Camilla Griffiths (camillag@stanford.edu)"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 output:
   html_document:
@@ -13,18 +13,18 @@ output:
 
 ##Introduction
 
-[No abstract is needed.]  Each replication project will have a straightforward, no frills report of the study and results.  These reports will be publicly available as supplementary material for the aggregate report(s) of the project as a whole.  Also, to maximize project integrity, the intro and methods will be written and critiqued in advance of data collection.  Introductions can be just 1-2 paragraphs clarifying the main idea of the original study, the target finding for replication, and any other essential information.  It will NOT have a literature review -- that is in the original publication. You can write both the introduction and the methods in past tense.  
+Each replication project will have a straightforward, no frills report of the study and results.  These reports will be publicly available as supplementary material for the aggregate report(s) of the project as a whole.  Also, to maximize project integrity, the intro and methods will be written and critiqued in advance of data collection.  Introductions can be just 1-2 paragraphs clarifying the main idea of the original study, the target finding for replication, and any other essential information.  It will NOT have a literature review -- that is in the original publication. You can write both the introduction and the methods in past tense.  
 
 
 ##Methods
 
 ###Power Analysis
 
-Original effect size, power analysis for samples to achieve 80%, 90%, 95% power to detect that effect size.  Considerations of feasibility for selecting planned sample size.
+The original analysis were a simple two-tailed t-test, and using their original sample size and reported effect size I performed a post-hoc power analysis, which yielded 60% percent. To achieve the desired 80% power in this replication while maintaining the effect size of d=0.62, I increased the sample from the original 88 to 126.  Given that the sample is going to be collected on Mturk as it was in the original study, I think that this increase in sample size to obtain 80% power is feasible. 
 
 ###Planned Sample
 
-Planned sample size and/or termination rule, sampling frame, known demographics if any, preselection rules if any.
+Planned sample, as stated above, is 126 participants for a 2X1 study design. 
 
 ###Materials
 
@@ -40,100 +40,11 @@ This procedure was precisely followed with the exception of the exact wording of
 
 ###Analysis Plan
 
+The key analysis is as follows: 
 
-```{r setup, include=FALSE}
-library(tidyverse)
-library(effsize)
-```
+I will conduct the same manipulation checks that were done in the original study: calculating raw mean ratings of Peter (the target) as rude and helpful as well as a regression testing the likelihood of rating Peter as rude or helpful based on condition, and extracting t-statistics and effect sizes for each of these regressions. 
 
-
-```{r download pilot data}
-pilot1= read_csv('/Users/camilla/Documents/Winter 17/Psych254/Porter-etal2016/experiment/pilot1data.csv')
-```
-
-
-From the paper (re: LIB manipulation checks): 
-
-"As expected, participants in
-the favorable-LIB condition believed that Peter was more
-likely to be helpful in the future (M = 70.29%, SD = 23.58)
-than did participants in the unfavorable-LIB condition
-(M = 57.83%, SD = 24.08), t(86) = 2.45, p = .016, d = 0.53.
-Similarly, participants in the favorable-LIB condition indicated
-that Peter was less likely to be rude in the future
-(M = 33.67%, SD = 25.48) compared with participants in
-the unfavorable-LIB condition (M = 53.93%, SD = 25.22),
-t(86) = 3.73, p < .001, d = 0.80."
-
-```{r manipulation checks}
-#condition variable
-pilot1 = pilot1 %>%
-  slice(-(1:2)) %>%
-  mutate(condition= ifelse(is.na(LIB_DV) , "ULIB", "LIB"))
-str(pilot1$condition)
-
-#mean perception of peter as helpful & rude
-pilot1$MCfuture_helpful_1=as.numeric(pilot1$MCfuture_helpful_1)
-pilot1$MCfuture_rude_1=as.numeric(pilot1$MCfuture_rude_1)
-pilot1$condition=as.factor(pilot1$condition)
-
-pilot1 %>%
-  group_by(condition) %>%
-  summarise(meanhelp=mean(MCfuture_helpful_1)) 
-
-pilot1 %>%
-  group_by(condition) %>%
-  summarise(meanrude=mean(MCfuture_rude_1))
-
-#MC question: are people perceiving peter to be more rude/helpful based on condition?
-summary(lm(MCfuture_rude_1 ~ condition, data=pilot1))
-summary(lm(MCfuture_helpful_1 ~ condition, data=pilot1))
-```
-
-From the paper (re: main DV analysis): 
-
-"Social category inference. The primary dependent
-measure was participants’ inferences regarding the communicator’s
-political affiliation. As predicted, participants
-in the favorable-LIB condition were significantly more
-likely to believe that the communicator was a Democrat,
-and thus shared a party affiliation with the target, than
-were participants in the unfavorable-LIB condition,
-t(86) = 2.89, p = .005, d = 0.62 (Fig. 1). This difference
-was not moderated by participants’ self-reported political-
-party affiliation or ideological endorsement (ps > .18).
-Our findings suggested initial support for our hypothesis
-that individuals can infer a communicator’s social identity
-from his or her language, regardless of their own social
-identity"
-
-```{r social category inference - MAIN DV}
-pilot1[is.na(pilot1)] = ''
-#creating new 'social identity perception' variable
-pilot1=pilot1%>%
-  mutate(peterID=paste(LIB_DV, ULIB_DV)) %>%
-  mutate(peterID=as.numeric(peterID)) %>%
-  mutate(pol_orient=as.factor(pol_orient))
-
-#does LIB condition impact people's perceptions of Peter's identity? (1=definitely a democrat, 7=definitely a republican)
-summary(lm(peterID ~ condition, data=pilot1))
-#getting effect size for this main DV analysis 
-cohen.d(pilot1$peterID ~ pilot1$condition, conf.level=0.95)
-
-#testing for moderation of participants' political affiliation 
-summary(lm(peterID ~ condition + pol_orient, data=pilot1))
-
-```
-
-```{r replication plot from original study}
-pilot1$peterID=as.integer(pilot1$peterID)
-pilot1$condition=as.factor(pilot1$condition)
-ggplot(pilot1, 
-       aes(x=condition, y=peterID)) + geom_bar(position='dodge', stat='identity')+
-  ylab("Mean Political Category ID") + 
-  xlab("LIB Condition")
-```
-
+After the manipulation check anlayses, the main DV analyses test participants' inferences about the communicator's political identity based on the LIB condition. A simple regression predicting identification of communicator by LIB condition gets at this effect, and just as the authors did I test this simple model as well as one moderated by the participants' own political orientation. In both cases, I will calculate the effect sizes for each regression and will be looking to replicate the t-statistic, p-value, and effect sizes. 
 
 
 ###Differences from Original Study
@@ -159,35 +70,123 @@ You can comment this section out prior to final report with data collection.
 
 ##Results
 
+```{r setup, include=FALSE}
+library(tidyverse)
+library(effsize)
+library(knitr)
+```
 
 ### Data preparation
 
 Data preparation following the analysis plan.
 	
 ```{r include=F}
-###Data Preparation
-
-####Load Relevant Libraries and Functions
-
 ####Import data
+pilotA= read_csv('/Users/camilla/Documents/Winter_17/Psych254/Porter-etal2016/experiment/pilot1data.csv')
 
-#### Data exclusion / filtering
-
-#### Prepare data for analysis - create columns etc.
+#condition variable
+pilotA = pilotA %>%
+  slice(-(1:2)) %>%
+  mutate(condition= ifelse(is.na(LIB_DV) , "ULIB", "LIB"))
+str(pilotA$condition)
 ```
 
 ### Confirmatory analysis
 
-The analyses as specified in the analysis plan.  
+From the paper (re: LIB manipulation checks): 
 
-*Side-by-side graph with original graph is ideal here*
+"As expected, participants in
+the favorable-LIB condition believed that Peter was more
+likely to be helpful in the future (M = 70.29%, SD = 23.58)
+than did participants in the unfavorable-LIB condition
+(M = 57.83%, SD = 24.08), t(86) = 2.45, p = .016, d = 0.53.
+Similarly, participants in the favorable-LIB condition indicated
+that Peter was less likely to be rude in the future
+(M = 33.67%, SD = 25.48) compared with participants in
+the unfavorable-LIB condition (M = 53.93%, SD = 25.22),
+t(86) = 3.73, p < .001, d = 0.80."
+
+```{r manipulation checks}
+
+#mean perception of peter as helpful & rude
+pilotA$MCfuture_helpful_1=as.numeric(pilotA$MCfuture_helpful_1)
+pilotA$MCfuture_rude_1=as.numeric(pilotA$MCfuture_rude_1)
+pilotA$condition=as.factor(pilotA$condition)
+
+pilotA %>%
+  group_by(condition) %>%
+  summarise(meanhelp=mean(MCfuture_helpful_1)) 
+
+pilotA %>%
+  group_by(condition) %>%
+  summarise(meanrude=mean(MCfuture_rude_1))
+
+#MC question: are people perceiving peter to be more rude/helpful based on condition?
+summary(lm(MCfuture_rude_1 ~ condition, data=pilotA))
+cohen.d(pilotA$MCfuture_rude_1 ~ pilotA$condition, conf.level=0.95)
+
+summary(lm(MCfuture_helpful_1 ~ condition, data=pilotA))
+cohen.d(pilotA$MCfuture_helpful_1 ~ pilotA$condition, conf.level=0.95)
+
+
+```
+
+From the paper (re: main DV analysis): 
+
+"Social category inference. The primary dependent
+measure was participants’ inferences regarding the communicator’s
+political affiliation. As predicted, participants
+in the favorable-LIB condition were significantly more
+likely to believe that the communicator was a Democrat,
+and thus shared a party affiliation with the target, than
+were participants in the unfavorable-LIB condition,
+t(86) = 2.89, p = .005, d = 0.62 (Fig. 1). This difference
+was not moderated by participants’ self-reported political-
+party affiliation or ideological endorsement (ps > .18).
+Our findings suggested initial support for our hypothesis
+that individuals can infer a communicator’s social identity
+from his or her language, regardless of their own social
+identity"
+
+```{r social category inference - MAIN DV}
+pilotA[is.na(pilotA)] = ''
+#creating new 'social identity perception' variable
+pilotA=pilotA%>%
+  mutate(peterID=paste(LIB_DV, ULIB_DV)) %>%
+  mutate(peterID=as.numeric(peterID)) %>%
+  mutate(pol_orient=as.factor(pol_orient))
+
+#does LIB condition impact people's perceptions of Peter's identity? (1=definitely a democrat, 7=definitely a republican)
+summary(lm(peterID ~ condition, data=pilotA))
+#getting effect size for this main DV analysis 
+cohen.d(pilotA$peterID ~ pilotA$condition, conf.level=0.95)
+
+#testing for moderation of participants' political affiliation 
+summary(lm(peterID ~ condition + pol_orient, data=pilotA))
+
+```
+
+```{r replication plot from original study}
+pilotA$peterID=as.integer(pilotA$peterID)
+pilotA$condition=as.factor(pilotA$condition)
+ggplot(pilotA, 
+       aes(x=condition, y=peterID)) + geom_bar(position='dodge', stat='identity')+
+  ylab("Mean Political Category ID") + 
+  xlab("LIB Condition")
+```
+
+
+Original Plot for Study 1a can be seen below
+
+![](~/Documents/Winter_17/Psych254/Porter-etal2016/experiment/original_plot.png) 
+
 
 ## Discussion
 
 ### Summary of Replication Attempt
 
-Open the discussion section with a paragraph summarizing the primary result from the confirmatory analysis and the assessment of whether it replicated, partially replicated, or failed to replicate the original result.  
+#Open the discussion section with a paragraph summarizing the primary result from the confirmatory analysis and the assessment of whether it replicated, partially replicated, or failed to replicate the original result.  
 
 ### Commentary
 
-Add open-ended commentary (if any) reflecting (a) insights from follow-up exploratory analysis, (b) assessment of the meaning of the replication (or not) - e.g., for a failure to replicate, are the differences between original and present study ones that definitely, plausibly, or are unlikely to have been moderators of the result, and (c) discussion of any objections or challenges raised by the current and original authors about the replication attempt.  None of these need to be long.
+#Add open-ended commentary (if any) reflecting (a) insights from follow-up exploratory analysis, (b) assessment of the meaning of the replication (or not) - e.g., for a failure to replicate, are the differences between original and present study ones that definitely, plausibly, or are unlikely to have been moderators of the result, and (c) discussion of any objections or challenges raised by the current and original authors about the replication attempt.  None of these need to be long.
