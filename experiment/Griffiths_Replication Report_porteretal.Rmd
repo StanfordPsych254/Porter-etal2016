@@ -13,7 +13,7 @@ output:
 
 ##Introduction
 
-Each replication project will have a straightforward, no frills report of the study and results.  These reports will be publicly available as supplementary material for the aggregate report(s) of the project as a whole.  Also, to maximize project integrity, the intro and methods will be written and critiqued in advance of data collection.  Introductions can be just 1-2 paragraphs clarifying the main idea of the original study, the target finding for replication, and any other essential information.  It will NOT have a literature review -- that is in the original publication. You can write both the introduction and the methods in past tense.  
+This replication report tested study 1a from Porter et al, 2016 "Inferring Identity From Language: Linguistic Intergroup Bias Informs Social Categorization". The package of studies in this paper tests whether people are able to infer the social identity of a speaker based on their language-use, specifically their use of Linguistic Intergroup Bias (LIB): the use of abstract language to describe in-group targets' desirable behaviors and concrete language to describe their undesirable behaviors (favorable LIB), and the use of concrete language for out-group targets' desirable behaviors and abstract language for their undesirable behaviors (unfavorable LIB). The paper includes 4 studies, each of which manipulates a *communicator's* use of either favorable or unfavorable LIB and measures participants' social categorization of the communicator. In study 1a, it tests the most basic hypothesis that people can infer the social identity (in this case, poltiical orientation) of a communicator based on the conreteness or abstractness of their language (i.e. LIB) about a target. 
 
 
 ##Methods
@@ -178,7 +178,9 @@ ggplot(pilotA,
 
 Original Plot for Study 1a can be seen below
 
-![](~/Documents/Winter_17/Psych254/Porter-etal2016/experiment/original_plot.png) 
+
+![](https://raw.githubusercontent.com/StanfordPsych254/Porter-etal2016/master/experiment/original_plot.png)
+ 
 
 
 ## Discussion
