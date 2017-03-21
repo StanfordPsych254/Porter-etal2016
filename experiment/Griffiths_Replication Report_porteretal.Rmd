@@ -13,24 +13,26 @@ output:
 
 ##Introduction
 
-This replication report tested study 1a from Porter et al, 2016 "Inferring Identity From Language: Linguistic Intergroup Bias Informs Social Categorization". The package of studies in this paper tests whether people are able to infer the social identity of a speaker based on their language-use, specifically their use of Linguistic Intergroup Bias (LIB): the use of abstract language to describe in-group targets' desirable behaviors and concrete language to describe their undesirable behaviors (favorable LIB), and the use of concrete language for out-group targets' desirable behaviors and abstract language for their undesirable behaviors (unfavorable LIB). The paper includes 4 studies, each of which manipulates a *communicator's* use of either favorable or unfavorable LIB and measures participants' social categorization of the communicator. In study 1a, it tests the most basic hypothesis that people can infer the social identity (in this case, poltiical orientation) of a communicator based on the conreteness or abstractness of their language (i.e. LIB) about a target. 
+This replication report tested study 1a from Porter et al, 2016 "Inferring Identity From Language: Linguistic Intergroup Bias Informs Social Categorization". The package of studies in this paper tests whether people are able to infer the social identity of a speaker based on their language-use, specifically their use of Linguistic Intergroup Bias (LIB): the use of abstract language to describe in-group targets' desirable behaviors and concrete language to describe their undesirable behaviors (favorable LIB), and the use of concrete language for out-group targets' desirable behaviors and abstract language for their undesirable behaviors (unfavorable LIB). The paper includes 4 studies, each of which manipulates a *communicator's* use of either favorable or unfavorable LIB and measures participants' social categorization of the communicator. In study 1a, it tests the hypothesis that people can infer the social identity (in this case, poltiical orientation) of a communicator based on the conreteness or abstractness of their language (i.e. LIB) about a target. 
 
 
 ##Methods
 
 ###Power Analysis
 
-The original analysis were a simple two-tailed t-test, and using their original sample size and reported effect size I performed a post-hoc power analysis, which yielded 60% percent. To achieve the desired 80% power in this replication while maintaining the effect size of d=0.62, I increased the sample from the original 88 to 126.  Given that the sample is going to be collected on Mturk as it was in the original study, I think that this increase in sample size to obtain 80% power is feasible. 
+The original analysis appears to be a two-sample t-test, and using their original sample size and reported effect size I performed a post-hoc power analysis, which yielded 60% percent power. To achieve the desired 80% power in this replication while maintaining the effect size of d=0.62, I increased the sample from the original 88 to 126.  Given that the sample is going to be collected on Mturk as it was in the original study, I think that this increase in sample size to obtain 80% power is feasible. 
+
+Note: the authors did not specify which type of t-test they performed, but I intuited it was a two-sample t-test based on their language and the design of the study. This is the only language in the results section for the primary DV of interest: "participants in the favorable-LIB condition were significantly more likely to believe that the communicator was a Democrat, and thus shared a party affiliation with the target, than were participants in the unfavorable-LIB condition, t(86) = 2.89, p = .005, d = 0.62."
 
 ###Planned Sample
 
-Planned sample, as stated above, is 126 participants for a 2X1 study design. 
+Planned sample, as stated above, is 126 participants for a two condition, within-participant study design. 
 
 ###Materials
 
 "Participants completed all tasks on a computer. They were asked to read a passage and then respond to questions. The beginning of the passage was the same for all participants: “Imagine that someone is communicating with you about a man named Peter. Peter is American, has an interest in politics, and voted for Barack Obama.” This information was intended to subtly imply that Peter (the target) was a Democrat. In the second part of the passage, participants were provided with the communicator’s description of Peter’s helpful and rude behaviors." 
 
-These materials were offered in full in the SI. 
+These materials were offered in full in the SI [found here](http://journals.sagepub.com/doi/suppl/10.1177/0956797615612202/suppl_file/suppl-material.pdf). 
 
 ###Procedure	
 
@@ -44,7 +46,7 @@ The key analysis is as follows:
 
 I will conduct the same manipulation checks that were done in the original study: calculating raw mean ratings of Peter (the target) as rude and helpful as well as a regression testing the likelihood of rating Peter as rude or helpful based on condition, and extracting t-statistics and effect sizes for each of these regressions. 
 
-After the manipulation check anlayses, the main DV analyses test participants' inferences about the communicator's political identity based on the LIB condition. A simple regression predicting identification of communicator by LIB condition gets at this effect, and just as the authors did I test this simple model as well as one moderated by the participants' own political orientation. In both cases, I will calculate the effect sizes for each regression and will be looking to replicate the t-statistic, p-value, and effect sizes. 
+After the manipulation check anlayses, the key analysis of interest will be the regression predicting identification of communicator by LIB condition.  I will also examine the same regression moderated by the participants' own political orientation, just as the authors did. In both cases, I will calculate the effect sizes for each regression and will be looking to replicate the t-statistic, p-value, and effect sizes. 
 
 
 ###Differences from Original Study
@@ -71,27 +73,31 @@ You can comment this section out prior to final report with data collection.
 ##Results
 
 ```{r setup, include=FALSE}
-library(tidyverse)
-library(effsize)
-library(knitr)
+library("tidyverse")
+library("effsize")
+library("magrittr")
+library("dplyr")
+library("broom")
+library("stringr")
+library("knitr")
 ```
 
 ### Data preparation
 
-Data preparation following the analysis plan.
-	
+Importing data and creating Favorable (LIB) and Unfavorable (ULIB) condition variables. 
+
 ```{r include=F}
-####Import data
 pilotA= read_csv('/Users/camilla/Documents/Winter_17/Psych254/Porter-etal2016/experiment/pilot1data.csv')
 
-#condition variable
 pilotA = pilotA %>%
   slice(-(1:2)) %>%
   mutate(condition= ifelse(is.na(LIB_DV) , "ULIB", "LIB"))
 str(pilotA$condition)
 ```
 
-### Confirmatory analysis
+### Confirmatory analysis 
+
+##Manipulation Check
 
 From the paper (re: LIB manipulation checks): 
 
@@ -108,7 +114,6 @@ t(86) = 3.73, p < .001, d = 0.80."
 
 ```{r manipulation checks}
 
-#mean perception of peter as helpful & rude
 pilotA$MCfuture_helpful_1=as.numeric(pilotA$MCfuture_helpful_1)
 pilotA$MCfuture_rude_1=as.numeric(pilotA$MCfuture_rude_1)
 pilotA$condition=as.factor(pilotA$condition)
@@ -121,15 +126,24 @@ pilotA %>%
   group_by(condition) %>%
   summarise(meanrude=mean(MCfuture_rude_1))
 
-#MC question: are people perceiving peter to be more rude/helpful based on condition?
-summary(lm(MCfuture_rude_1 ~ condition, data=pilotA))
+mc_helpful=lm(MCfuture_rude_1 ~ condition, data=pilotA)
+mc_help_table <- tidy(mc_helpful)
+mc_help_table %>% print(digits = 3)
+kable(mc_help_table, digits = 3,
+      col.names = c("Param", "B", "SE", "t", "p"))
 cohen.d(pilotA$MCfuture_rude_1 ~ pilotA$condition, conf.level=0.95)
 
-summary(lm(MCfuture_helpful_1 ~ condition, data=pilotA))
+mc_rude=lm(MCfuture_helpful_1 ~ condition, data=pilotA)
+mc_rude_table <- tidy(mc_rude)
+mc_rude_table %>% print(digits = 3)   
+kable(mc_rude_table, digits = 3,
+      col.names = c("Param", "B", "SE", "t", "p"))
 cohen.d(pilotA$MCfuture_helpful_1 ~ pilotA$condition, conf.level=0.95)
 
 
 ```
+
+##Key Statistical Analysis
 
 From the paper (re: main DV analysis): 
 
@@ -148,29 +162,46 @@ that individuals can infer a communicator’s social identity
 from his or her language, regardless of their own social
 identity"
 
+For this analysis, I create a 'social identity inference' variable (peterID) as the primary outcome variable. I then run a linear regression predicting peterID by LIB condition to produce the main statistics of interest: the t-statistic, p-value, and cohen's d of this effect. This analysis answers the question: does LIB condition impact people's perceptions of Peter's identity? (1=definitely a democrat, 7=definitely a republican). Just as the authors did, I also test for moderation of this effect by the participant's own political orientation. 
+
 ```{r social category inference - MAIN DV}
 pilotA[is.na(pilotA)] = ''
-#creating new 'social identity perception' variable
 pilotA=pilotA%>%
   mutate(peterID=paste(LIB_DV, ULIB_DV)) %>%
   mutate(peterID=as.numeric(peterID)) %>%
-  mutate(pol_orient=as.factor(pol_orient))
+  mutate(pol_orient=as.numeric(pol_orient))
 
-#does LIB condition impact people's perceptions of Peter's identity? (1=definitely a democrat, 7=definitely a republican)
-summary(lm(peterID ~ condition, data=pilotA))
-#getting effect size for this main DV analysis 
+
+polID=lm(peterID ~ condition, data=pilotA)
+polID_table <- tidy(polID)
+polID_table %>% print(digits = 3)
+kable(polID_table, digits = 3,
+      col.names = c("Param", "B", "SE", "t", "p"))
 cohen.d(pilotA$peterID ~ pilotA$condition, conf.level=0.95)
 
-#testing for moderation of participants' political affiliation 
-summary(lm(peterID ~ condition + pol_orient, data=pilotA))
-
+#summary(lm(peterID ~ condition + pol_orient, data=pilotA)) #commenting this out now because there's not enough data in pilotA to run this regression. 
 ```
 
 ```{r replication plot from original study}
 pilotA$peterID=as.integer(pilotA$peterID)
 pilotA$condition=as.factor(pilotA$condition)
-ggplot(pilotA, 
-       aes(x=condition, y=peterID)) + geom_bar(position='dodge', stat='identity')+
+ 
+sem = function(x)                    
+{sqrt(var(x)/length(x))}            
+
+agg <- pilotA %>% group_by(condition) %>% 
+      summarise(mean = mean(peterID,na.rm=T), 
+                se = sem(as.numeric(peterID)), 
+                upper = mean + 1.96*se, 
+                lower = mean - 1.96*se)
+
+ggplot(agg,aes(x=condition,y=mean,fill=condition)) + 
+geom_bar(stat="identity", position="dodge") + 
+theme_classic() +
+geom_errorbar( aes( ymax=upper, ymin=lower ),
+                           width   =0.5,
+                          linetype="solid",
+                          position="dodge")+
   ylab("Mean Political Category ID") + 
   xlab("LIB Condition")
 ```
@@ -187,8 +218,8 @@ Original Plot for Study 1a can be seen below
 
 ### Summary of Replication Attempt
 
-#Open the discussion section with a paragraph summarizing the primary result from the confirmatory analysis and the assessment of whether it replicated, partially replicated, or failed to replicate the original result.  
+<!-- Open the discussion section with a paragraph summarizing the primary result from the confirmatory analysis and the assessment of whether it replicated, partially replicated, or failed to replicate the original result --> 
 
 ### Commentary
 
-#Add open-ended commentary (if any) reflecting (a) insights from follow-up exploratory analysis, (b) assessment of the meaning of the replication (or not) - e.g., for a failure to replicate, are the differences between original and present study ones that definitely, plausibly, or are unlikely to have been moderators of the result, and (c) discussion of any objections or challenges raised by the current and original authors about the replication attempt.  None of these need to be long.
+<!-- #Add open-ended commentary (if any) reflecting (a) insights from follow-up exploratory analysis, (b) assessment of the meaning of the replication (or not) - e.g., for a failure to replicate, are the differences between original and present study ones that definitely, plausibly, or are unlikely to have been moderators of the result, and (c) discussion of any objections or challenges raised by the current and original authors about the replication attempt.  None of these need to be long.-->
