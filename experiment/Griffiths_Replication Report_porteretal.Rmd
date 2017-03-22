@@ -87,12 +87,14 @@ library("knitr")
 Importing data and creating Favorable (LIB) and Unfavorable (ULIB) condition variables. 
 
 ```{r include=F}
-pilotA= read_csv('/Users/camilla/Documents/Winter_17/Psych254/Porter-etal2016/experiment/pilot1data.csv')
+d= read_csv('/Users/camilla/Documents/Winter_17/Psych254/Porter-etal2016/experiment/254_porter_et_al_replication.csv')
 
-pilotA = pilotA %>%
+d = d %>%
   slice(-(1:2)) %>%
-  mutate(condition= ifelse(is.na(LIB_DV) , "ULIB", "LIB"))
-str(pilotA$condition)
+  mutate(condition= ifelse(is.na(LIB_DV) , "ULIB", "LIB"))%>%
+  filter(V10==1) #removing the one participant who did not finish the study (finished=1, incomplete response=0)
+str(d$condition)
+
 ```
 
 ### Confirmatory analysis 
@@ -114,34 +116,43 @@ t(86) = 3.73, p < .001, d = 0.80."
 
 ```{r manipulation checks}
 
-pilotA$MCfuture_helpful_1=as.numeric(pilotA$MCfuture_helpful_1)
-pilotA$MCfuture_rude_1=as.numeric(pilotA$MCfuture_rude_1)
-pilotA$condition=as.factor(pilotA$condition)
+d$MCfuture_helpful_1=as.numeric(d$MCfuture_helpful_1)
+d$MCfuture_rude_1=as.numeric(d$MCfuture_rude_1)
+d$condition=as.factor(d$condition)
 
-pilotA %>%
+contrasts(d$condition)
+d %>%
   group_by(condition) %>%
-  summarise(meanhelp=mean(MCfuture_helpful_1)) 
+  summarise(meanhelp=mean(MCfuture_helpful_1))
 
-pilotA %>%
+d %>%
   group_by(condition) %>%
   summarise(meanrude=mean(MCfuture_rude_1))
 
-mc_helpful=lm(MCfuture_rude_1 ~ condition, data=pilotA)
+mc_helpful=lm(MCfuture_helpful_1 ~ condition, data=d)
 mc_help_table <- tidy(mc_helpful)
 mc_help_table %>% print(digits = 3)
 kable(mc_help_table, digits = 3,
       col.names = c("Param", "B", "SE", "t", "p"))
-cohen.d(pilotA$MCfuture_rude_1 ~ pilotA$condition, conf.level=0.95)
+cohen.d(d$MCfuture_helpful_1 ~ d$condition, conf.level=0.95)
 
-mc_rude=lm(MCfuture_helpful_1 ~ condition, data=pilotA)
+mc_rude=lm(MCfuture_rude_1 ~ condition, data=d)
 mc_rude_table <- tidy(mc_rude)
 mc_rude_table %>% print(digits = 3)   
 kable(mc_rude_table, digits = 3,
       col.names = c("Param", "B", "SE", "t", "p"))
-cohen.d(pilotA$MCfuture_helpful_1 ~ pilotA$condition, conf.level=0.95)
+cohen.d(d$MCfuture_rude_1 ~ d$condition, conf.level=0.95)
 
 
 ```
+
+#Manipulation Check Replication results: 
+
+Participants in the favorable-LIB condition believed that Peter was more likely to be helpful in the future (*M=68.36%*) than did participants in the unfavorable-LIB condition (*M=56.14%*), *t(117)= 3.23, p<0.001, d=0.64*.
+
+Participants in the favorable-LIB condition believed that Peter was less likely to be rude in the future (*M=32.9*) than did participants in the unfavorable-LIB condition (*M=54.18*), *t(117)=5.23, p<0.001, d=0.96*.
+
+Successful replication of their manipulation checks such that people interpreted the target, Peter, in the way that was intended in each LIB condition. 
 
 ##Key Statistical Analysis
 
@@ -165,31 +176,40 @@ identity"
 For this analysis, I create a 'social identity inference' variable (peterID) as the primary outcome variable. I then run a linear regression predicting peterID by LIB condition to produce the main statistics of interest: the t-statistic, p-value, and cohen's d of this effect. This analysis answers the question: does LIB condition impact people's perceptions of Peter's identity? (1=definitely a democrat, 7=definitely a republican). Just as the authors did, I also test for moderation of this effect by the participant's own political orientation. 
 
 ```{r social category inference - MAIN DV}
-pilotA[is.na(pilotA)] = ''
-pilotA=pilotA%>%
+d[is.na(d)] = ''
+d=d%>%
   mutate(peterID=paste(LIB_DV, ULIB_DV)) %>%
   mutate(peterID=as.numeric(peterID)) %>%
   mutate(pol_orient=as.numeric(pol_orient))
 
 
-polID=lm(peterID ~ condition, data=pilotA)
+polID=lm(peterID ~ condition, data=d)
 polID_table <- tidy(polID)
 polID_table %>% print(digits = 3)
 kable(polID_table, digits = 3,
       col.names = c("Param", "B", "SE", "t", "p"))
-cohen.d(pilotA$peterID ~ pilotA$condition, conf.level=0.95)
+cohen.d(d$peterID ~ d$condition, conf.level=0.95)
 
-#summary(lm(peterID ~ condition + pol_orient, data=pilotA)) #commenting this out now because there's not enough data in pilotA to run this regression. 
+summary(lm(peterID ~ condition + pol_orient, data=d)) 
+
+describe(d$peterID)
+
 ```
 
+#Primary DV replication results: 
+
+The primary dependent measure appears to replicate, with participants in the favorable-LIB condition being significantly more likely to identify the communicator as a Democrat (thus sharing political ID with the target, Peter) than participants in the unfavorable-LIB condition, *t(117)=3.93, p<0.001, d=0.72* and it looks like our larger sample size yielded a larger effect size in our replication than in the original study. 
+
+This difference between LIB conditions, as in the original results, was not moderated by participants' self-reported political-party affiliation (*p=0.62*). 
+
 ```{r replication plot from original study}
-pilotA$peterID=as.integer(pilotA$peterID)
-pilotA$condition=as.factor(pilotA$condition)
+d$peterID=as.integer(d$peterID)
+d$condition=as.factor(d$condition)
  
 sem = function(x)                    
 {sqrt(var(x)/length(x))}            
 
-agg <- pilotA %>% group_by(condition) %>% 
+agg <- d %>% group_by(condition) %>% 
       summarise(mean = mean(peterID,na.rm=T), 
                 se = sem(as.numeric(peterID)), 
                 upper = mean + 1.96*se, 
@@ -198,8 +218,9 @@ agg <- pilotA %>% group_by(condition) %>%
 ggplot(agg,aes(x=condition,y=mean,fill=condition)) + 
 geom_bar(stat="identity", position="dodge") + 
 theme_classic() +
+scale_fill_brewer(palette="Set1")  +
 geom_errorbar( aes( ymax=upper, ymin=lower ),
-                           width   =0.5,
+                           width   =0.3,
                           linetype="solid",
                           position="dodge")+
   ylab("Mean Political Category ID") + 
@@ -218,8 +239,9 @@ Original Plot for Study 1a can be seen below
 
 ### Summary of Replication Attempt
 
-<!-- Open the discussion section with a paragraph summarizing the primary result from the confirmatory analysis and the assessment of whether it replicated, partially replicated, or failed to replicate the original result --> 
+This replication appears to be a success! Both the manipulation checks and the primary DV analyses in this replication of study 1a produced the same results as the original study: finding that participants are more likely to infer that a communicator shares political identification with a target when they use Favorable LIB language than when they use Unfavorable LIB language. The only inconsistency is in the mean ratings of the communicator's political identity, with participants in this replication rating the communicator as overwhelmingly more 'democrat' across both conditions than in the original study. That is, in the original study, ratings were between 3 and 4.5 on a 7 point scale, whereas in this replication the mean rating was aroung 5.5. The paper does not include a mean rating value, so I am inferring their mean ratings from the plot above. Given that the ratings are stronger in both conditions, I do not think this is an indication of a stronger effect of LIB condition, but rather a reflection of greater political polarization in the U.S. right now. So, the fact that the communicator said something nice about the target *at all* may have made participants more likely to categorize them as a Democrat. 
+
 
 ### Commentary
 
-<!-- #Add open-ended commentary (if any) reflecting (a) insights from follow-up exploratory analysis, (b) assessment of the meaning of the replication (or not) - e.g., for a failure to replicate, are the differences between original and present study ones that definitely, plausibly, or are unlikely to have been moderators of the result, and (c) discussion of any objections or challenges raised by the current and original authors about the replication attempt.  None of these need to be long.-->
+It is encouraging that this study was able to replicate because it tests the foundational notion that the rest of the paper relies on - that one can infer social identity from subtle features in language. 
